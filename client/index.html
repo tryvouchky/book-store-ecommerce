@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link id="favicon" rel="icon" type="image/png" href="/favicon.ico" />
+    <link id="apple-icon" rel="apple-touch-icon" href="/favicon.ico" />
+    <title id="page-title">The Book Bindery</title>
+  </head>
+
+  <body>
+    <div id="root"></div>
+
+    <script type="module" src="/src/main.tsx"></script>
+
+    <script type="module">
+      // Runtime safe injection of title, icons and analytics.
+      const logo = import.meta.env.VITE_APP_LOGO;
+      const title = import.meta.env.VITE_APP_TITLE;
+      const endpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT;
+      const siteId = import.meta.env.VITE_ANALYTICS_WEBSITE_ID;
+
+      // Helper: detect unresolved placeholder patterns
+      const isPlaceholder = (v) =>
+        !v || typeof v !== "string" || /%VITE_|%VITE|%VITE_ANALYTICS_ENDPOINT%|%VITE_APP_LOGO%/.test(v);
+
+      // Title
+      try {
+        if (title && !isPlaceholder(title)) {
+          document.getElementById("page-title").innerText = title;
+        } else {
+          document.getElementById("page-title").innerText = "THE BOOK BINDERY"
+        }
+      } catch (e) {}
+
+      // Icons (fallback to /favicon.ico)
+      try {
+        if (!isPlaceholder(logo)) {
+          document.getElementById("favicon").href = logo;
+          document.getElementById("apple-icon").href = logo;
+        } else {
+          document.getElementById("favicon").href = "/favicon.ico";
+          document.getElementById("apple-icon").href = "/favicon.ico";
+        }
+      } catch (e) {}
+
+      // Inject Umami (only when endpoint looks valid)
+      try {
+        if (!isPlaceholder(endpoint)) {
+          const ep = endpoint.replace(/\/+$/, "");
+          // Best to append the explicit JS file; adjust if your analytics expects another path.
+          const scriptSrc = `${ep}/umami.js`;
+          const s = document.createElement("script");
+          s.defer = true;
+          s.async = true;
+          s.src = scriptSrc;
+          if (!isPlaceholder(siteId)) s.setAttribute("data-website-id", siteId);
+          document.body.appendChild(s);
+        } else {
+          // don't attempt to load a literal placeholder URL
+          // console.warn("Analytics endpoint not configured or placeholder detected; skipping injection.");
+        }
+      } catch (e) {}
+    </script>
+  </body>
+</html>
